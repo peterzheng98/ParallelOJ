@@ -74,4 +74,12 @@ func RoutineRegisterClient(w http.ResponseWriter, r *http.Request) {
 		IdentificationKey: idk,
 	})
 	// TODO: start the corresponding coroutine
+	go func(){
+		serverMux := http.NewServeMux()
+		serverMux.HandleFunc("/heartBeat", RoutineListenerHeartBeat)
+		err := http.ListenAndServe(fmt.Sprintf("%s:%d", globalServerBindAddr, availPort), serverMux)
+		// Here should not call checkError in order to prevent unexpected halting
+		utils.Warnings(fmt.Sprintf("server on port %d", availPort), fmt.Sprintf("Runtime error: %s", err.Error()))
+		utils.Warnings(fmt.Sprintf("server on port %d", availPort), "Server stops.")
+	}()
 }

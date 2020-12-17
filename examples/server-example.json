@@ -13,5 +13,6 @@
   "database_port": 123,
   "database_path": "/compiler",
   "server_identification_token": "123",
-  "start_port": 30000
+  "start_port": 30000,
+  "trust_key": "abc"
 }

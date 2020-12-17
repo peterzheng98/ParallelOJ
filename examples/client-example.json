@@ -4,5 +4,6 @@
   "port": 10430,
   "identities": "HelloWorld",
   "name": "Tester#1",
-  "pwd": "auth-pwd"
+  "pwd": "auth-pwd",
+  "trust_key": "abc"
 }

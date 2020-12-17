@@ -12,8 +12,9 @@ type ServerConfig_FileJSON struct {
 	DatabaseUser              string `json:"database_user"`
 	DatabasePassword          string `json:"database_password"`
 	DatabaseAddr              string `json:"database_addr"`
-	DatabasePort              int	 `json:"database_port"`
+	DatabasePort              int    `json:"database_port"`
 	DatabasePath              string `json:"database_path"`
 	ServerIdentificationToken string `json:"server_identification_token"`
 	StartPort                 int    `json:"start_port"`
+	TrustKey                  string `json:"trust_key"`
 }

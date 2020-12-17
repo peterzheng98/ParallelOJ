@@ -28,7 +28,7 @@ var (
 )
 
 var globalHeartBeat = 0
-
+var globalServerBindAddr = ""
 func ServerEntry(ConfigPath string){
 	utils.Logs("server", fmt.Sprintf("Startup with server mode with file %s.", ConfigPath))
 	servConfig := utils.ReadFromServerJSON(ConfigPath)
@@ -36,9 +36,10 @@ func ServerEntry(ConfigPath string){
 	utils.Logs("server", utils.ServerJSONToString(servConfig))
 	identificationToken = servConfig.ServerIdentificationToken
 	globalHeartBeat = servConfig.Heartbeat
+	globalServerBindAddr = servConfig.BindAddr
 	// make port list, here no need for mutex
 	for i := 0; i < servConfig.MaximizeClient; i++ {
-		portList = append(portList, i * 2 + servConfig.StartPort)
+		portList = append(portList, i + servConfig.StartPort)
 	}
 	utils.Logs("server", fmt.Sprintf("make port: from %d to %d", portList[0], portList[len(portList) - 1]))
 	// bind to the path: http://addr:port/

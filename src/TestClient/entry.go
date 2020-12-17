@@ -9,22 +9,53 @@ import (
 )
 
 var ClientStatus = 1
+var trust_key = ""
 
-func heartbeat(heartbeat int, addr string, port int) {
+// Danger Zone!!
+var UNTRUST = false
+
+func heartbeat(heartbeat int, addr string, port int, idk string) {
 	for {
 		heartbeatMessage := HeartBeatClient{
 			Timestamp: utils.MakeTimestamp(),
 			Status:    ClientStatus,
 			Additional: "", // TODO: add current judge status
+			Port: port,
+			IDK: idk,
+			Operation: 0,
 		}
-		_ = utils.SendHTTPRequestJSON(addr, port, heartbeatMessage)
+		// TODO: check the server is alive
+		heartbeatMess := ServerHeartBeatReply_HTTPJSON{}
+		heartbeatBytes := utils.SendHTTPRequestJSON(addr, port, heartbeatMessage)
+		err := json.Unmarshal(heartbeatBytes, &heartbeatMess)
+		if err != nil{
+			utils.Warnings("client", "Runtime error: heartbeat package error")
+			utils.CheckError(err)
+		}
+		if !UNTRUST && heartbeatMess.TrustKey != trust_key{
+			utils.Warnings("client", "Runtime error: UNTRUSTABLE SERVER!!")
+			utils.Warnings("client", "Received key not equal to local.")
+			utils.CheckError(errors.New("Untrustable server: Receive non-equal key"))
+		} else if heartbeatMess.TrustKey != trust_key {
+			utils.Warnings("client", "Runtime error: UNTRUSTABLE SERVER!!")
+			utils.Warnings("client", "Received key not equal to local. Configuration set to start up in untrust mode.")
+		}
 		time.Sleep(time.Duration(heartbeat) * time.Second)
 	}
 }
 
-func makeJudge(){
+func makeJudge(addr string, port int, idk string) {
 	for {
+		receiveMessage := ClientRequestJudge{
+			Timestamp:  utils.MakeTimestamp(),
+			Status:     ClientStatus,
+			Additional: "",
+			Port:       port,
+			IDK:        idk,
+			Operation:  1,
+		}
 
+		reply = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
 	}
 }
 
@@ -55,6 +86,6 @@ func ClientEntry(ConfigPath string){
 	}
 	utils.Logs("client", "Judge start.")
 	// Make long connection to the heartbeat
-	go heartbeat(registerReply.Heartbeat, cliConfig.ServerAddr, registerReply.ConnPort)
-	go makeJudge()
+	go heartbeat(registerReply.Heartbeat, cliConfig.ServerAddr, registerReply.ConnPort, registerReply.IdentificationKey)
+	go makeJudge(cliConfig.ServerAddr, registerReply.ConnPort, registerReply.IdentificationKey)
 }

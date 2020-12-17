@@ -7,6 +7,7 @@ type ClientConfig_FileJSON struct {
 	Identities string `json:"identities"`
 	Name       string `json:"name"`
 	Pwd        string `json:"pwd"`
+	TrustKey   string `json:"trust_key"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {
@@ -26,4 +27,21 @@ type HeartBeatClient struct {
 	Timestamp  int64  `json:"timestamp"`
 	Status     int    `json:"status"`
 	Additional string `json:"additional"`
+	Port       int    `json:"port"`
+	IDK        string `json:"idk"`
+	Operation  int    `json:"operation"`
+}
+
+type ClientRequestJudge struct {
+	Timestamp  int64  `json:"timestamp"`
+	Status     int    `json:"status"`
+	Additional string `json:"additional"`
+	Port       int    `json:"port"`
+	IDK        string `json:"idk"`
+	Operation  int    `json:"operation"`
+}
+
+type ServerHeartBeatReply_HTTPJSON struct {
+	Status int `json:"status"`
+	TrustKey string `json:"trust_key"`
 }

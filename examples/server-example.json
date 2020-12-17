@@ -4,6 +4,12 @@
   "bind_addr": "0.0.0.0",
   "listen_addr": "N/A",
   "heartbeat": 1,
-  "maximizeClient": 5,
-  "heartbeatTimeout": 3
+  "maximize_client": 5,
+  "heartbeat_timeout": 3,
+  "database_type": "mysql",
+  "database_user": "root",
+  "database_password": "123",
+  "database_addr": "123",
+  "database_port": 123,
+  "database_path": "/compiler"
 }

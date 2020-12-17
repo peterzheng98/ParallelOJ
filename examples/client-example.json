@@ -1,0 +1,8 @@
+{
+  "mode": "client",
+  "server_addr": "101.132.67.35",
+  "port": 10430,
+  "identities": "HelloWorld",
+  "name": "Tester#1",
+  "pwd": "auth-pwd"
+}

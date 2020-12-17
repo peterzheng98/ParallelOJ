@@ -11,10 +11,10 @@ import (
 func ReadFromClientJSON(filePath string) TestClient.ClientConfig_FileJSON {
 	data, err := ioutil.ReadFile(filePath)
 	CheckError(err)
-	client_config := &TestClient.ClientConfig_FileJSON{}
-	err = json.Unmarshal(data, &client_config)
+	clientConfig := &TestClient.ClientConfig_FileJSON{}
+	err = json.Unmarshal(data, &clientConfig)
 	CheckError(err)
-	return *client_config
+	return *clientConfig
 }
 
 func ClientJSONToString(fileJSON TestClient.ClientConfig_FileJSON) string {
@@ -24,10 +24,10 @@ func ClientJSONToString(fileJSON TestClient.ClientConfig_FileJSON) string {
 func ReadFromServerJSON(filePath string) TestServer.ServerConfig_FileJSON {
 	data, err := ioutil.ReadFile(filePath)
 	CheckError(err)
-	client_config := &TestServer.ServerConfig_FileJSON{}
-	err = json.Unmarshal(data, &client_config)
+	serverConfig := &TestServer.ServerConfig_FileJSON{}
+	err = json.Unmarshal(data, &serverConfig)
 	CheckError(err)
-	return *client_config
+	return *serverConfig
 }
 
 func ServerJSONToString(fileJSON TestServer.ServerConfig_FileJSON) string {

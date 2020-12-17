@@ -23,7 +23,7 @@ type RegisterServerReply_HTTPJSON struct {
 }
 
 type HeartBeatClient struct {
-	Timestamp int64 `json:"timestamp"`
-	Status    int `json:"status"`
+	Timestamp  int64  `json:"timestamp"`
+	Status     int    `json:"status"`
 	Additional string `json:"additional"`
 }

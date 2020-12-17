@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -19,11 +20,27 @@ func Logs(name string, message string){
 	}
 }
 
+func NetworkLogs(r *http.Request, name string, message string){
+	if colored {
+		fmt.Printf("\033[33m[%s][%s] %s : %s\033[0m\n", getTime(), name, r.RemoteAddr, message)
+	} else {
+		fmt.Printf("[%s][%s] %s : %s\n", getTime(), name, r.RemoteAddr, message)
+	}
+}
+
 func Warnings(name string, message string)  {
 	if colored {
 		fmt.Printf("\033[36m[%s][%s]: %s\033[0m\n", getTime(), name, message)
 	} else {
 		fmt.Printf("[%s][%s]: %s\n", getTime(), name, message)
+	}
+}
+
+func NetworkWarnings(r *http.Request, name string, message string)  {
+	if colored {
+		fmt.Printf("\033[36m[%s][%s] %s : %s\033[0m\n", getTime(), name, r.RemoteAddr, message)
+	} else {
+		fmt.Printf("[%s][%s] %s : %s\n", getTime(), name, r.RemoteAddr, message)
 	}
 }
 

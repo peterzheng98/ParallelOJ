@@ -50,6 +50,8 @@ func ClientEntry(ConfigPath string){
 	utils.CheckError(err)
 	if registerReply.StatusCode != 0{
 		utils.CheckError(errors.New(fmt.Sprintf("Status code %d received.", registerReply.StatusCode)))
+		// TODO: For no port exception(ErrCode: 100), wait for an interval and retry
+		return
 	}
 	utils.Logs("client", "Judge start.")
 	// Make long connection to the heartbeat

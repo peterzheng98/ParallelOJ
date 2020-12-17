@@ -11,5 +11,7 @@
   "database_password": "123",
   "database_addr": "123",
   "database_port": 123,
-  "database_path": "/compiler"
+  "database_path": "/compiler",
+  "server_identification_token": "123",
+  "start_port": 30000
 }

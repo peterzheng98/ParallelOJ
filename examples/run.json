@@ -1,0 +1,7 @@
+{
+  "mode": "server",
+  "port": 10430,
+  "bind_addr": "0.0.0.0",
+  "listen_addr": "N/A",
+  "heartbeat": 1
+}

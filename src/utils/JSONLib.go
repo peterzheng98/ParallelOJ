@@ -18,7 +18,7 @@ func ReadFromClientJSON(filePath string) TestClient.ClientConfig_FileJSON {
 }
 
 func ClientJSONToString(fileJSON TestClient.ClientConfig_FileJSON) string {
-	return fmt.Sprintf("Connect to %s:%s, Client Identities: %s, name: %s", fileJSON.ServerAddr, fileJSON.Port, fileJSON.Identities, fileJSON.Name)
+	return fmt.Sprintf("Connect to %s:%d, Client Identities: %s, name: %s", fileJSON.ServerAddr, fileJSON.Port, fileJSON.Identities, fileJSON.Name)
 }
 
 func ReadFromServerJSON(filePath string) TestServer.ServerConfig_FileJSON {
@@ -32,6 +32,5 @@ func ReadFromServerJSON(filePath string) TestServer.ServerConfig_FileJSON {
 
 func ServerJSONToString(fileJSON TestServer.ServerConfig_FileJSON) string {
 	return fmt.Sprintf("Bind to %s:%d, require heartbeat: %d second, max: %d clients, timeout: %d seconds, SQL Type: %s, SQL path: %s:%d[%s]",
-		fileJSON.BindAddr, fileJSON.Port, fileJSON.Heartbeat, fileJSON.MaximizeClient, fileJSON.HeartbeatTimeout, fileJSON.DatabaseType, fileJSON.DatabaseAddr, fileJSON.DatabasePort, fileJSON.DatabasePath
-	)
+		fileJSON.BindAddr, fileJSON.Port, fileJSON.Heartbeat, fileJSON.MaximizeClient, fileJSON.HeartbeatTimeout, fileJSON.DatabaseType, fileJSON.DatabaseAddr, fileJSON.DatabasePort, fileJSON.DatabasePath)
 }

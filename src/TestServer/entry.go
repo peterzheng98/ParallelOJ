@@ -2,6 +2,7 @@ package TestServer
 
 import (
 	"fmt"
+	"github.com/nats-io/nuid"
 	"net/http"
 	"sync"
 	"utils"
@@ -15,6 +16,18 @@ var (
 	portListMutex sync.Mutex
 	portList []int
 )
+var (
+	identificationKey = nuid.New()
+	identificationKeyMutex sync.Mutex
+)
+
+var (
+	matchIDK map[int]string
+	matchName map[int]string
+	matchIDKMutex sync.Mutex
+)
+
+var globalHeartBeat = 0
 
 func ServerEntry(ConfigPath string){
 	utils.Logs("server", fmt.Sprintf("Startup with server mode with file %s.", ConfigPath))
@@ -22,9 +35,10 @@ func ServerEntry(ConfigPath string){
 	utils.Logs("server", "Get server configuration file")
 	utils.Logs("server", utils.ServerJSONToString(servConfig))
 	identificationToken = servConfig.ServerIdentificationToken
+	globalHeartBeat = servConfig.Heartbeat
 	// make port list, here no need for mutex
 	for i := 0; i < servConfig.MaximizeClient; i++ {
-		portList = append(portList, i + servConfig.StartPort)
+		portList = append(portList, i * 2 + servConfig.StartPort)
 	}
 	utils.Logs("server", fmt.Sprintf("make port: from %d to %d", portList[0], portList[len(portList) - 1]))
 	// bind to the path: http://addr:port/

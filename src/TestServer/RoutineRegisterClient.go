@@ -35,6 +35,7 @@ func RoutineRegisterClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// identities matched, make a port now
+	// NOTICE: Go into the critical region(TestServer/entry.go:portList)
 	portListMutex.Lock()
 	if len(portList) == 0 {
 		portListMutex.Unlock()
@@ -50,5 +51,27 @@ func RoutineRegisterClient(w http.ResponseWriter, r *http.Request) {
 	availPort := portList[0]
 	portList = portList[1:]
 	portListMutex.Unlock()
-	
+	// NOTICE: Go out from the critical region(TestServer/entry.go:portList)
+
+	// Dispatch the data: target port, heartbeat requirement, NUID as identification key
+	// Critical region(TestServer/entry.go:identificationKey)
+	identificationKeyMutex.Lock()
+	idk := identificationKey.Next()
+	identificationKeyMutex.Unlock()
+	// Critical region(TestServer/entry.go:identificationKey) End
+	// Set to the global pool
+
+	// Critical Region(TestServer/entry.go:matchIDK, matchName)
+	matchIDKMutex.Lock()
+	matchIDK[availPort] = idk
+	matchName[availPort] = request.Name
+	matchIDKMutex.Unlock()
+	// Critical Region(TestServer/entry.go:matchIDK, matchName) End
+	_ = json.NewEncoder(w).Encode(TestClient.RegisterServerReply_HTTPJSON{
+		StatusCode:        0,
+		Heartbeat:         globalHeartBeat,
+		ConnPort:          availPort,
+		IdentificationKey: idk,
+	})
+	// TODO: start the corresponding coroutine
 }

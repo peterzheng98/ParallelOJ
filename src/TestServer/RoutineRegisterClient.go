@@ -67,6 +67,12 @@ func RoutineRegisterClient(w http.ResponseWriter, r *http.Request) {
 	matchName[availPort] = request.Name
 	matchIDKMutex.Unlock()
 	// Critical Region(TestServer/entry.go:matchIDK, matchName) End
+
+	// Critical Region(TestServer/entry.go:availTimeStamp)
+	availTimeStampMutex.Lock()
+	availTimeStamp[availPort] = -1
+	availTimeStampMutex.Unlock()
+	// Critical Region(TestServer/entry.go:availTimeStamp) End
 	_ = json.NewEncoder(w).Encode(TestClient.RegisterServerReply_HTTPJSON{
 		StatusCode:        0,
 		Heartbeat:         globalHeartBeat,
@@ -76,10 +82,16 @@ func RoutineRegisterClient(w http.ResponseWriter, r *http.Request) {
 	// TODO: start the corresponding coroutine
 	go func(){
 		serverMux := http.NewServeMux()
-		serverMux.HandleFunc("/heartBeat", RoutineListenerHeartBeat)
+		ports := &Ports{
+			Port:              availPort,
+			IdentificationKey: idk,
+		}
+		serverMux.HandleFunc("/heartBeat", ports.RoutineListenerHeartBeat)
 		err := http.ListenAndServe(fmt.Sprintf("%s:%d", globalServerBindAddr, availPort), serverMux)
 		// Here should not call checkError in order to prevent unexpected halting
-		utils.Warnings(fmt.Sprintf("server on port %d", availPort), fmt.Sprintf("Runtime error: %s", err.Error()))
-		utils.Warnings(fmt.Sprintf("server on port %d", availPort), "Server stops.")
+		if err != nil {
+			utils.Warnings(fmt.Sprintf("server on port %d", availPort), fmt.Sprintf("Runtime error: %s", err.Error()))
+			utils.Warnings(fmt.Sprintf("server on port %d", availPort), "Server stops.")
+		}
 	}()
 }

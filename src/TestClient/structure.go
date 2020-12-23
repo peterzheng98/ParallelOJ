@@ -39,9 +39,15 @@ type ClientRequestJudge struct {
 	Port       int    `json:"port"`
 	IDK        string `json:"idk"`
 	Operation  int    `json:"operation"`
+	RequestCount int `json:"request_count"`
 }
 
 type ServerHeartBeatReply_HTTPJSON struct {
-	Status int `json:"status"`
+	Status   int    `json:"status"`
 	TrustKey string `json:"trust_key"`
+}
+
+type Ports struct {
+	Port int `json:"port"`
+	IdentificationKey string `json:"identification_key"`
 }

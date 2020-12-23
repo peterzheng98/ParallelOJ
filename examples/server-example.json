@@ -2,7 +2,7 @@
   "mode": "server",
   "port": 10430,
   "bind_addr": "0.0.0.0",
-  "listen_addr": "N/A",
+  "listen_port": 10431,
   "heartbeat": 1,
   "maximize_client": 5,
   "heartbeat_timeout": 3,

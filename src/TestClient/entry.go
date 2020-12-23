@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git"
+	"github.com/go-git/go-git/storage/memory"
 	"time"
 	"utils"
 )
@@ -60,7 +62,17 @@ func makeJudge(addr string, port int, idk string) {
 			RequestCount: CliRequestCount,
 		}
 
-		reply = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
+		reply := utils.SendHTTPRequestJSON(addr, port, receiveMessage)
+		replyMess := TestcaseFormat{}
+		err := json.Unmarshal(reply, &replyMess)
+		if err != nil {
+			utils.Warnings("client", "Runtime error: workload package error")
+			utils.CheckError(err)
+		}
+		r, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			URL: "https://github.com/go-git/go-billy",
+		})
+		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
 

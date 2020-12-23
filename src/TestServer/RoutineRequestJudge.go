@@ -37,10 +37,16 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	// TODO: update time stamp of the server
+	// Critical Region(TestServer/entry.go:availTimeStamp)
+	availTimeStampMutex.Lock()
+	availTimeStamp[recvMessage.Port] = recvMessage.Timestamp
+	availTimeStampMutex.Unlock()
+	// Critical Region(TestServer/entry.go:availTimeStamp) End
+	// Critical Region: gitHashList(JudgePool)
 	gitHashListMux.Lock()
 	if len(gitHashList) == 0 {
 		gitHashListMux.Unlock()
+		// Critical Region: gitHashList(JudgePool) End
 		_ = json.NewEncoder(w).Encode(DispatchedWorkSlice{
 			User:    "",
 			GitRepo: "",
@@ -66,6 +72,7 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 		e.Build.Status = INRunning
 		judgeStatus[headHash] = e
 		gitHashListMux.Unlock()
+		// Critical Region: gitHashList(JudgePool) End
 		sendWork.Cases = make([]TestcaseFormat, 1)
 		sendWork.Cases[0] = TestcaseFormat{
 			IsAssertion:   false,
@@ -122,6 +129,7 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 			gitHashList = append(gitHashList[1:], headHash)
 		}
 		gitHashListMux.Unlock()
+		// Critical Region: gitHashList(JudgePool) End
 		// TODO: fill the data
 		_ = json.NewEncoder(w).Encode(sendWork)
 		return

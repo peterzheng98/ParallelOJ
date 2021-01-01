@@ -1,10 +1,15 @@
 package TestClient
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/go-git/go-git"
 	_ "github.com/go-git/go-git"
+	"github.com/go-git/go-git/plumbing"
 	_ "github.com/go-git/go-git/storage/memory"
 	"time"
 	"utils"
@@ -13,6 +18,8 @@ import (
 var ClientStatus = 1
 var trust_key = ""
 var CliRequestCount = 1
+
+var localClonePath = ""
 
 // Danger Zone!!
 var UNTRUST = false
@@ -63,7 +70,73 @@ func makeJudge(addr string, port int, idk string) {
 		}
 
 
-		_ = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
+		reply := utils.SendHTTPRequestJSON(addr, port, receiveMessage)
+		replyMess := DispatchedWorkSlice{}
+		err := json.Unmarshal(reply, &replyMess)
+		if err != nil {
+			utils.Warnings("client", "Runtime error: workload package error")
+			utils.CheckError(err)
+		}
+
+		// Todo: 1. Check if there is no work at all
+
+		imageMakeName := fmt.Sprintf("%s:%s", replyMess.User, replyMess.GitHash[0:8])
+		var imageFound bool
+		// 2. Check the image exists
+		if replyMess.PhaseId != -1{
+			ctx := context.Background()
+			cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+			if err != nil{
+				utils.CheckError(err)
+			}
+			imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+				All: false,
+			})
+
+			imageFound = false
+			utils.CheckError(err)
+			for _, image := range imageList{
+				// Search all tags in the images
+				for _, subTag := range image.RepoTags{
+					if subTag == imageMakeName{
+						imageFound = true
+						break
+					}
+				}
+				if imageFound {
+					break
+				}
+			}
+		}
+		var buildSuccess = true
+		if (replyMess.PhaseId == -1) || (!imageFound){
+			r, err := git.PlainClone(localClonePath, false, &git.CloneOptions{
+				URL: replyMess.GitRepo,
+			})
+			w, err := r.Worktree()
+			if err != nil {
+				utils.Warnings(fmt.Sprintf("TestClient:[Clone user %s, git address: %s, target hash: %s]", replyMess.User, replyMess.GitRepo, replyMess.GitHash), err.Error())
+				// TODO: reply: bad package
+				buildSuccess = false
+			}
+			err = w.Checkout(&git.CheckoutOptions{
+				Hash: plumbing.NewHash(replyMess.GitHash),
+			})
+			if err != nil {
+				utils.Warnings(fmt.Sprintf("TestClient:[Build user %s, git address: %s, target hash: %s]", replyMess.User, replyMess.GitRepo, replyMess.GitHash), err.Error())
+				// TODO: reply: bad package
+				buildSuccess = false
+			}
+		}
+		if !buildSuccess{
+			// todo: send bad package
+		} else {
+
+		}
+
+
+
+		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
 
@@ -71,6 +144,7 @@ func ClientEntry(ConfigPath string) {
 	// load configs
 	utils.Logs("client", fmt.Sprintf("Startup with client mode with file %s.", ConfigPath))
 	cliConfig := utils.ReadFromClientJSON(ConfigPath)
+	localClonePath = cliConfig.PathPrefix
 	utils.Logs("client", "Get client configuration files.")
 	utils.Logs("client", utils.ClientJSONToString(cliConfig))
 	// test connections and fetch the base config

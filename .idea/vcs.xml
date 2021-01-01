@@ -4,6 +4,7 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/anmitsu/go-shlex" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/armon/go-socks5" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/docker/docker" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/emirpasic/gods" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/gliderlabs/ssh" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/github.com/go-git/gcfg" vcs="Git" />

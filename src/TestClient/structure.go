@@ -8,6 +8,7 @@ type ClientConfig_FileJSON struct {
 	Name       string `json:"name"`
 	Pwd        string `json:"pwd"`
 	TrustKey   string `json:"trust_key"`
+	PathPrefix string `json:"path_prefix"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {

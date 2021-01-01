@@ -60,7 +60,7 @@ func makeJudge(addr string, port int, idk string) {
 			RequestCount: CliRequestCount,
 		}
 
-		reply = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
+		_ = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
 	}
 }
 

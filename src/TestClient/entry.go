@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git"
+	"github.com/go-git/go-git/storage/memory"
 	"time"
 	"utils"
 )
@@ -59,6 +61,7 @@ func makeJudge(addr string, port int, idk string) {
 			Operation:    1,
 			RequestCount: CliRequestCount,
 		}
+
 
 		_ = utils.SendHTTPRequestJSON(addr, port, receiveMessage)
 	}

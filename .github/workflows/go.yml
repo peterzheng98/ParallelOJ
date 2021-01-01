@@ -22,7 +22,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build
-      run: go build src/.
+      run: cd src && GO111MODULE=off go build .
 
     - name: Test
-      run: go run src/. --help
+      run: cd src && ./src --help

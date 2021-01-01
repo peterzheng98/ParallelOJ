@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-git/go-git"
-	"github.com/go-git/go-git/storage/memory"
+	_ "github.com/go-git/go-git"
+	_ "github.com/go-git/go-git/storage/memory"
 	"time"
 	"utils"
 )

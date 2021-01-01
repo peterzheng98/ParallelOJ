@@ -4,6 +4,7 @@ import (
 	"TestClient"
 	"TestServer"
 	"flag"
+	_ "github.com/go-git/go-git"
 )
 
 var cliType = flag.String("mode", "", "Set the judge type. [client, server]")

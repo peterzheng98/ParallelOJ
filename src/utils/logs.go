@@ -9,7 +9,7 @@ import (
 var colored = true
 
 func getTime() string {
-	return time.Now().Format("2020-12-17 14:01:30")
+	return time.Now().Format("2006-01-02 15:04:05")
 }
 
 func Logs(name string, message string){
@@ -46,7 +46,7 @@ func NetworkWarnings(r *http.Request, name string, message string)  {
 
 func CheckError(err error){
 	if err != nil{
-		fmt.Printf("[%s][FATAL ERROR]: %s", getTime(), err.Error())
+		fmt.Printf("[%s][FATAL ERROR]: %s\n", getTime(), err.Error())
 		panic(err)
 	}
 }

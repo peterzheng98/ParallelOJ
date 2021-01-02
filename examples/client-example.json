@@ -6,5 +6,6 @@
   "name": "Tester#1",
   "pwd": "auth-pwd",
   "trust_key": "abc",
-  "path_prefix": "/tmp/test2"
+  "path_prefix": "/tmp/test2",
+  "base_image_name": "base:v1.0"
 }

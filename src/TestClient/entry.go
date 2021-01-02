@@ -2,16 +2,18 @@ package TestClient
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/codeskyblue/go-sh"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/go-git/go-git"
 	_ "github.com/go-git/go-git"
 	"github.com/go-git/go-git/plumbing"
 	_ "github.com/go-git/go-git/storage/memory"
-	"io"
+	"io/ioutil"
 	"time"
 	"utils"
 )
@@ -21,7 +23,7 @@ var trust_key = ""
 var CliRequestCount = 1
 
 var localClonePath = ""
-
+var base_image = ""
 // Danger Zone!!
 var UNTRUST = false
 
@@ -81,7 +83,8 @@ func makeJudge(addr string, port int, idk string) {
 
 		// Todo: 1. Check if there is no work at all
 
-		imageMakeName := fmt.Sprintf("%s:%s", replyMess.User, replyMess.GitHash[0:8])
+		imageMakeTag := fmt.Sprintf("%s:%s", replyMess.User, replyMess.GitHash[0:8])
+
 		var imageFound bool
 		// 2. Check the image exists
 		if replyMess.PhaseId != -1{
@@ -99,7 +102,7 @@ func makeJudge(addr string, port int, idk string) {
 			for _, image := range imageList{
 				// Search all tags in the images
 				for _, subTag := range image.RepoTags{
-					if subTag == imageMakeName{
+					if subTag == imageMakeTag {
 						imageFound = true
 						break
 					}
@@ -110,8 +113,13 @@ func makeJudge(addr string, port int, idk string) {
 			}
 		}
 		var buildSuccess = true
+
 		if (replyMess.PhaseId == -1) || (!imageFound){
-			r, err := git.PlainClone(localClonePath, false, &git.CloneOptions{
+			parentFolderName := fmt.Sprintf("%s_%s", replyMess.User, replyMess.GitHash[0:8])
+			DockerbuildPath := fmt.Sprintf("%s/%s", localClonePath, parentFolderName)
+			clonePath := fmt.Sprintf("%s/%s/src", localClonePath, parentFolderName)
+			DockerfilePath := fmt.Sprintf("%s/%s/Dockerfile", localClonePath, parentFolderName)
+			r, err := git.PlainClone(clonePath, false, &git.CloneOptions{
 				URL: replyMess.GitRepo,
 			})
 			w, err := r.Worktree()
@@ -129,47 +137,20 @@ func makeJudge(addr string, port int, idk string) {
 				buildSuccess = false
 			}
 			// TODO: make image
-			ctx := context.Background()
-			cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-			if err != nil {
+			contents := []byte(fmt.Sprintf("FROM %s\nWORKDIR /src\nCOPY src .\nRUN /bin/bash build.bash", base_image))
+			err = ioutil.WriteFile(DockerfilePath, contents, 0644)
+			// TODO: reply: bad package
+			utils.CheckError(err)
+			if replyMess.PhaseId == -1{
+				output, err := sh.Command("docker", "build", "-t", fmt.Sprintf("%s", imageMakeTag), ".", sh.Dir(DockerbuildPath)).CombinedOutput()
+				// TODO: if err != nil: reply bad package
+				utils.CheckError(err)
+				_ = base64.StdEncoding.EncodeToString(output)
+			} else {
+				_, err := sh.Command("docker", "build", "-t", fmt.Sprintf("%s", imageMakeTag), ".", sh.Dir(DockerbuildPath)).CombinedOutput()
 				utils.CheckError(err)
 			}
-			cli.ImageBuild(ctx, io.ByteReader(), types.ImageBuildOptions{
-				Tags:           nil,
-				SuppressOutput: false,
-				RemoteContext:  "",
-				NoCache:        false,
-				Remove:         false,
-				ForceRemove:    false,
-				PullParent:     false,
-				Isolation:      "",
-				CPUSetCPUs:     "",
-				CPUSetMems:     "",
-				CPUShares:      0,
-				CPUQuota:       0,
-				CPUPeriod:      0,
-				Memory:         0,
-				MemorySwap:     0,
-				CgroupParent:   "",
-				NetworkMode:    "",
-				ShmSize:        0,
-				Dockerfile:     "",
-				Ulimits:        nil,
-				BuildArgs:      nil,
-				AuthConfigs:    nil,
-				Context:        nil,
-				Labels:         nil,
-				Squash:         false,
-				CacheFrom:      nil,
-				SecurityOpt:    nil,
-				ExtraHosts:     nil,
-				Target:         "",
-				SessionID:      "",
-				Platform:       "",
-				Version:        "",
-				BuildID:        "",
-				Outputs:        nil,
-			})
+
 		}
 		if !buildSuccess{
 			// todo: send bad package
@@ -188,6 +169,7 @@ func ClientEntry(ConfigPath string) {
 	utils.Logs("client", fmt.Sprintf("Startup with client mode with file %s.", ConfigPath))
 	cliConfig := utils.ReadFromClientJSON(ConfigPath)
 	localClonePath = cliConfig.PathPrefix
+	base_image = cliConfig.BaseImageName
 	utils.Logs("client", "Get client configuration files.")
 	utils.Logs("client", utils.ClientJSONToString(cliConfig))
 	// test connections and fetch the base config

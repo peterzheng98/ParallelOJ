@@ -1,14 +1,15 @@
 package TestClient
 
 type ClientConfig_FileJSON struct {
-	Mode       string `json:"mode"`
-	ServerAddr string `json:"server_addr"`
-	Port       int    `json:"port"`
-	Identities string `json:"identities"`
-	Name       string `json:"name"`
-	Pwd        string `json:"pwd"`
-	TrustKey   string `json:"trust_key"`
-	PathPrefix string `json:"path_prefix"`
+	Mode          string `json:"mode"`
+	ServerAddr    string `json:"server_addr"`
+	Port          int    `json:"port"`
+	Identities    string `json:"identities"`
+	Name          string `json:"name"`
+	Pwd           string `json:"pwd"`
+	TrustKey      string `json:"trust_key"`
+	PathPrefix    string `json:"path_prefix"`
+	BaseImageName string `json:"base_image_name"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {

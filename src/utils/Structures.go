@@ -1,14 +1,15 @@
 package utils
 
 type ClientConfig_FileJSON struct {
-	Mode       string `json:"mode"`
-	ServerAddr string `json:"server_addr"`
-	Port       int    `json:"port"`
-	Identities string `json:"identities"`
-	Name       string `json:"name"`
-	Pwd        string `json:"pwd"`
-	TrustKey   string `json:"trust_key"`
-	PathPrefix string `json:"path_prefix"`
+	Mode          string `json:"mode"`
+	ServerAddr    string `json:"server_addr"`
+	Port          int    `json:"port"`
+	Identities    string `json:"identities"`
+	Name          string `json:"name"`
+	Pwd           string `json:"pwd"`
+	TrustKey      string `json:"trust_key"`
+	PathPrefix    string `json:"path_prefix"`
+	BaseImageName string `json:"base_image_name"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {
@@ -34,13 +35,13 @@ type HeartBeatClient struct {
 }
 
 type ClientRequestJudge struct {
-	Timestamp  int64  `json:"timestamp"`
-	Status     int    `json:"status"`
-	Additional string `json:"additional"`
-	Port       int    `json:"port"`
-	IDK        string `json:"idk"`
-	Operation  int    `json:"operation"`
-	RequestCount int `json:"request_count"`
+	Timestamp    int64  `json:"timestamp"`
+	Status       int    `json:"status"`
+	Additional   string `json:"additional"`
+	Port         int    `json:"port"`
+	IDK          string `json:"idk"`
+	Operation    int    `json:"operation"`
+	RequestCount int    `json:"request_count"`
 }
 
 type ServerHeartBeatReply_HTTPJSON struct {
@@ -49,7 +50,7 @@ type ServerHeartBeatReply_HTTPJSON struct {
 }
 
 type Ports struct {
-	Port int `json:"port"`
+	Port              int    `json:"port"`
 	IdentificationKey string `json:"identification_key"`
 }
 
@@ -72,8 +73,6 @@ type ServerConfig_FileJSON struct {
 	TrustKey                  string `json:"trust_key"`
 }
 
-
-
 type DispatchedWorkSlice struct {
 	User    string           `json:"user"`
 	GitRepo string           `json:"git_repo"`
@@ -82,7 +81,6 @@ type DispatchedWorkSlice struct {
 	WorkCnt int              `json:"work_cnt"`
 	Cases   []TestcaseFormat `json:"cases"`
 }
-
 
 type TestcaseFormat struct {
 	IsAssertion bool    `json:"is_assertion"`

@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-git/go-git"
 	"github.com/go-git/go-git/plumbing"
 	_ "github.com/go-git/go-git/storage/memory"
+	"io"
 	"time"
 	"utils"
 )
@@ -127,6 +128,48 @@ func makeJudge(addr string, port int, idk string) {
 				// TODO: reply: bad package
 				buildSuccess = false
 			}
+			// TODO: make image
+			ctx := context.Background()
+			cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+			if err != nil {
+				utils.CheckError(err)
+			}
+			cli.ImageBuild(ctx, io.ByteReader(), types.ImageBuildOptions{
+				Tags:           nil,
+				SuppressOutput: false,
+				RemoteContext:  "",
+				NoCache:        false,
+				Remove:         false,
+				ForceRemove:    false,
+				PullParent:     false,
+				Isolation:      "",
+				CPUSetCPUs:     "",
+				CPUSetMems:     "",
+				CPUShares:      0,
+				CPUQuota:       0,
+				CPUPeriod:      0,
+				Memory:         0,
+				MemorySwap:     0,
+				CgroupParent:   "",
+				NetworkMode:    "",
+				ShmSize:        0,
+				Dockerfile:     "",
+				Ulimits:        nil,
+				BuildArgs:      nil,
+				AuthConfigs:    nil,
+				Context:        nil,
+				Labels:         nil,
+				Squash:         false,
+				CacheFrom:      nil,
+				SecurityOpt:    nil,
+				ExtraHosts:     nil,
+				Target:         "",
+				SessionID:      "",
+				Platform:       "",
+				Version:        "",
+				BuildID:        "",
+				Outputs:        nil,
+			})
 		}
 		if !buildSuccess{
 			// todo: send bad package

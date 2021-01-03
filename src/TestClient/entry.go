@@ -82,6 +82,7 @@ func makeJudge(addr string, port int, idk string) {
 		}
 
 		// Todo: 1. Check if there is no work at all
+		// todo: add log output when judging
 
 		imageMakeTag := fmt.Sprintf("%s:%s", replyMess.User, replyMess.GitHash[0:8])
 
@@ -113,47 +114,97 @@ func makeJudge(addr string, port int, idk string) {
 			}
 		}
 		var buildSuccess = true
+		var buildFailMessage = ""
 
 		if (replyMess.PhaseId == -1) || (!imageFound){
 			parentFolderName := fmt.Sprintf("%s_%s", replyMess.User, replyMess.GitHash[0:8])
 			DockerbuildPath := fmt.Sprintf("%s/%s", localClonePath, parentFolderName)
 			clonePath := fmt.Sprintf("%s/%s/src", localClonePath, parentFolderName)
 			DockerfilePath := fmt.Sprintf("%s/%s/Dockerfile", localClonePath, parentFolderName)
+			JudgeSemanticPath := fmt.Sprintf("%s/%s/JudgeSemantic.bash", localClonePath, parentFolderName)
+			JudgeCodegenPath := fmt.Sprintf("%s/%s/JudgeCodegen.bash", localClonePath, parentFolderName)
+			JudgeOptimizePath := fmt.Sprintf("%s/%s/JudgeOptimize.bash", localClonePath, parentFolderName)
 			r, err := git.PlainClone(clonePath, false, &git.CloneOptions{
 				URL: replyMess.GitRepo,
 			})
 			w, err := r.Worktree()
 			if err != nil {
 				utils.Warnings(fmt.Sprintf("TestClient:[Clone user %s, git address: %s, target hash: %s]", replyMess.User, replyMess.GitRepo, replyMess.GitHash), err.Error())
-				// TODO: reply: bad package
+				// reply: bad package
 				buildSuccess = false
+				buildFailMessage = fmt.Sprintf("Internal Error when fetching repo: %s", replyMess.GitRepo)
 			}
 			err = w.Checkout(&git.CheckoutOptions{
 				Hash: plumbing.NewHash(replyMess.GitHash),
 			})
 			if err != nil {
 				utils.Warnings(fmt.Sprintf("TestClient:[Build user %s, git address: %s, target hash: %s]", replyMess.User, replyMess.GitRepo, replyMess.GitHash), err.Error())
-				// TODO: reply: bad package
+				// reply: bad package
 				buildSuccess = false
+				buildFailMessage = fmt.Sprintf("Internal Error when checking out the repo to hash: %s", replyMess.GitHash)
 			}
-			// TODO: make image
-			contents := []byte(fmt.Sprintf("FROM %s\nWORKDIR /src\nCOPY src .\nRUN /bin/bash build.bash", base_image))
+			// make image
+			JudgeSemanticContent := []byte("cp /mounted/input.mx /src/ && bash /src/semantic.bash")
+			_ = ioutil.WriteFile(JudgeSemanticPath, JudgeSemanticContent, 0644)
+			JudgeCodegenContent := []byte("cp /mounted/input.mx /src/ && bash codegen.bash && cp /src/output.mx /mounted/")
+			_ = ioutil.WriteFile(JudgeCodegenPath, JudgeCodegenContent, 0644)
+			JudgeOptimizeContent := []byte("cp /mounted/input.mx /src/ && bash optimize.bash && cp /src/output.mx /mounted/")
+			_ = ioutil.WriteFile(JudgeOptimizePath, JudgeOptimizeContent, 0644)
+			contents := []byte(fmt.Sprintf("FROM %s\nWORKDIR /src\nCOPY src .\nCOPY *.bash /\nRUN /bin/bash build.bash", base_image))
 			err = ioutil.WriteFile(DockerfilePath, contents, 0644)
-			// TODO: reply: bad package
-			utils.CheckError(err)
+			// reply: bad package
+			if err != nil{
+				buildSuccess = false
+				buildFailMessage = "Internal Error when creating Dockerfile and corresponding Bash"
+			}
 			if replyMess.PhaseId == -1{
 				output, err := sh.Command("docker", "build", "-t", fmt.Sprintf("%s", imageMakeTag), ".", sh.Dir(DockerbuildPath)).CombinedOutput()
 				// TODO: if err != nil: reply bad package
-				utils.CheckError(err)
-				_ = base64.StdEncoding.EncodeToString(output)
+				//utils.CheckError(err)
+				buildResult := base64.StdEncoding.EncodeToString(output)
+				uploadData := UploadWorkSlice{
+					User:         replyMess.User,
+					GitRepo:      replyMess.GitRepo,
+					GitHash:      replyMess.GitHash,
+					PhaseId:      replyMess.PhaseId,
+					WorkCnt:      replyMess.WorkCnt,
+					Cases:        nil,
+					PortsInfo:    Ports{port, idk},
+					BuildResult:  buildResult,
+					BuildVerdict: 1, // Failed
+				}
+				if err != nil {
+					uploadData.BuildVerdict = 1
+					_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
+					continue
+				} else {
+					uploadData.BuildVerdict = 0
+					_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
+					continue
+				}
 			} else {
 				_, err := sh.Command("docker", "build", "-t", fmt.Sprintf("%s", imageMakeTag), ".", sh.Dir(DockerbuildPath)).CombinedOutput()
 				utils.CheckError(err)
+				// TODO: There should be error, Uhh?
 			}
 
 		}
 		if !buildSuccess{
 			// todo: send bad package
+			buildFailMessage = base64.StdEncoding.EncodeToString([]byte(buildFailMessage))
+			uploadData := UploadWorkSlice{
+				User:         replyMess.User,
+				GitRepo:      replyMess.GitRepo,
+				GitHash:      replyMess.GitHash,
+				PhaseId:      replyMess.PhaseId,
+				WorkCnt:      replyMess.WorkCnt,
+				Cases:        nil,
+				PortsInfo:    Ports{port, idk},
+				BuildResult:  buildFailMessage,
+				BuildVerdict: 1, // Failed
+			}
+			_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
+			continue
 		} else {
 
 		}

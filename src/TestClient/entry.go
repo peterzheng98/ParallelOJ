@@ -23,6 +23,7 @@ var trust_key = ""
 var CliRequestCount = 1
 
 var localClonePath = ""
+var dataPath = ""
 var base_image = ""
 // Danger Zone!!
 var UNTRUST = false
@@ -206,6 +207,35 @@ func makeJudge(addr string, port int, idk string) {
 			_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
 			continue
 		} else {
+			// do judge here
+			// docker run --rm --cpus=1 -m 768M -v mount_path_host:mount_path_docker TAGS /bin/bash /src/Judge**.bash
+			// TODO: for different stages
+			// 1 - Semantics
+			uploadData := UploadWorkSlice{
+				User:         replyMess.User,
+				GitRepo:      replyMess.GitRepo,
+				GitHash:      replyMess.GitHash,
+				PhaseId:      replyMess.PhaseId,
+				WorkCnt:      replyMess.WorkCnt,
+				Cases:        nil,
+				PortsInfo:    Ports{port, idk},
+				BuildResult:  "",
+				BuildVerdict: 0,
+			}
+			casesList := make([]TestcaseFormat, len(replyMess.Cases))
+			if replyMess.PhaseId == 0 {
+				for idx, value := range replyMess.Cases{
+					casesList[idx] = replyMess.Cases[idx]
+					result := judgeSemantic(value.SourceCode, imageMakeTag, value.Assertion, value.TimeLimit, value.MemoryLimit)
+					casesList[idx].Verdict = result.Verdict
+					casesList[idx].StdOutMessage = result.StdOutMessage
+					casesList[idx].StdErrMessage = result.StdErrMessage
+					casesList[idx].Runtime = result.Runtime
+					casesList[idx].InstsCount = result.InstsCount
+				}
+				uploadData.Cases = casesList
+				_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
+			}
 
 		}
 
@@ -221,6 +251,7 @@ func ClientEntry(ConfigPath string) {
 	cliConfig := utils.ReadFromClientJSON(ConfigPath)
 	localClonePath = cliConfig.PathPrefix
 	base_image = cliConfig.BaseImageName
+	dataPath = cliConfig.DatasetMount
 	utils.Logs("client", "Get client configuration files.")
 	utils.Logs("client", utils.ClientJSONToString(cliConfig))
 	// test connections and fetch the base config

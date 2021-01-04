@@ -10,6 +10,7 @@ type ClientConfig_FileJSON struct {
 	TrustKey      string `json:"trust_key"`
 	PathPrefix    string `json:"path_prefix"`
 	BaseImageName string `json:"base_image_name"`
+	DatasetMount  string `json:"dataset_mount"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {

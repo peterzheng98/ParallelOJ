@@ -12,6 +12,7 @@ import (
 	_ "github.com/go-git/go-git"
 	"github.com/go-git/go-git/plumbing"
 	"io/ioutil"
+	"time"
 	"utils"
 )
 
@@ -19,6 +20,7 @@ var cliType = flag.String("mode", "", "Set the judge type. [client, server]")
 var cliConfig = flag.String("config", "", "Set the configure file")
 
 func main(){
+	t1 := time.Now()
 	tags := make([]string, 1)
 	tags[0] = "abc:b8ed972e"
 	//sess, err := sh.Command("docker", "build", "-t", fmt.Sprintf("%s", tags[0]), ".", sh.Dir("/tmp/clone-temp")).CombinedOutput()
@@ -48,10 +50,12 @@ func main(){
 		//utils.Warnings(fmt.Sprintf("TestClient:[Build user %s, git address: %s, target hash: %s]", replyMess.User, replyMess.GitRepo, replyMess.GitHash), err.Error())
 		// TODO: reply: bad package
 	}
-	contents := []byte("FROM base:v1.0\nWORKDIR /src\nCOPY src .\\nRUN /bin/bash build.bash")
+	contents := []byte("FROM base:v1.0\nWORKDIR /src\nCOPY src .\nRUN /bin/bash build.bash")
 	err = ioutil.WriteFile("/tmp/clone-temp/Dockerfile", contents, 0644)
 	utils.CheckError(err)
 	_ = sh.Command("tar", "-czf", "../docker.compiler.tar", ".", sh.Dir("/tmp/clone-temp")).Run()
+	elapsed := time.Since(t1)
+	fmt.Println("Elapsed: ", elapsed.Milliseconds())
 	//ctx := context.Background()
 	//cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	//if err != nil{

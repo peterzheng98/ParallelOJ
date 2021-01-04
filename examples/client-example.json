@@ -7,5 +7,6 @@
   "pwd": "auth-pwd",
   "trust_key": "abc",
   "path_prefix": "/tmp/test2",
-  "base_image_name": "base:v1.0"
+  "base_image_name": "base:v1.0",
+  "dataset_mount": "/tmp/test-data"
 }

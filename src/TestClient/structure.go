@@ -1,5 +1,19 @@
 package TestClient
 
+var VERDICT_CORRECT = 0
+var VERDICT_WRONG = 1
+var VERDICT_TLE = 2
+var VERDICT_MLE = 3
+var VERDICT_RE = 4
+var VERDICT_UNK = 5
+type SemanticJudgeResult struct {
+	Verdict       int     `json:"verdict"`
+	StdOutMessage string  `json:"std_out_message"`
+	StdErrMessage string  `json:"std_err_message"`
+	Runtime       float32 `json:"runtime"`
+	InstsCount    int64   `json:"insts_count"`
+}
+
 type ClientConfig_FileJSON struct {
 	Mode          string `json:"mode"`
 	ServerAddr    string `json:"server_addr"`
@@ -10,6 +24,7 @@ type ClientConfig_FileJSON struct {
 	TrustKey      string `json:"trust_key"`
 	PathPrefix    string `json:"path_prefix"`
 	BaseImageName string `json:"base_image_name"`
+	DatasetMount  string `json:"dataset_mount"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {

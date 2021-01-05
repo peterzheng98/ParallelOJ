@@ -84,7 +84,7 @@ type TestcaseFormat struct {
 	SourceCode  string  `json:"source_code"`
 	Assertion   bool    `json:"assertion"`
 	TimeLimit   float32 `json:"time_limit"`
-	InstLimit   int     `json:"inst_limit"`
+	InstLimit   int64     `json:"inst_limit"`
 	MemoryLimit int     `json:"memory_limit"`
 	Testcase    string  `json:"testcase"`
 	/* - For codegen / optimize only, requires run here- */
@@ -98,6 +98,10 @@ type TestcaseFormat struct {
 	StdErrMessage string  `json:"std_err_message"`
 	Runtime       float32 `json:"runtime"`
 	InstsCount    int64   `json:"insts_count"`
+	/* Codegen and Optimize Running */
+	RunningStdOut string `json:"running_std_out"`
+	RavelMessage  string `json:"ravel_message"`
+	ErrorMessage  string `json:"error_message"`
 }
 
 type DispatchedWorkSlice struct {

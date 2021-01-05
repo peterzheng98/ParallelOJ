@@ -90,7 +90,7 @@ type TestcaseFormat struct {
 	SourceCode  string  `json:"source_code"`
 	Assertion   bool    `json:"assertion"`
 	TimeLimit   float32 `json:"time_limit"`
-	InstLimit   int     `json:"inst_limit"`
+	InstLimit   int64     `json:"inst_limit"`
 	MemoryLimit int     `json:"memory_limit"`
 	Testcase    string  `json:"testcase"`
 	/* - For codegen / optimize only, requires run here- */
@@ -98,4 +98,23 @@ type TestcaseFormat struct {
 	OutputContext string `json:"output_context"`
 	OutputCode    int    `json:"output_code"`
 	BasicType     int    `json:"basic_type"`
+	/* - For submit result only */
+	Verdict       int     `json:"verdict"`
+	StdOutMessage string  `json:"std_out_message"`
+	StdErrMessage string  `json:"std_err_message"`
+	Runtime       float32 `json:"runtime"`
+	InstsCount    int64   `json:"insts_count"`
 }
+
+type UploadWorkSlice struct {
+	User         string           `json:"user"`
+	GitRepo      string           `json:"git_repo"`
+	GitHash      string           `json:"git_hash"`
+	PhaseId      int              `json:"phase_id"`
+	WorkCnt      int              `json:"work_cnt"`
+	Cases        []TestcaseFormat `json:"cases"`
+	PortsInfo    Ports            `json:"ports_info"`
+	BuildResult  string           `json:"build_result"`
+	BuildVerdict int              `json:"build_verdict"`
+}
+

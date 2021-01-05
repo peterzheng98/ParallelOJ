@@ -236,12 +236,24 @@ func makeJudge(addr string, port int, idk string) {
 				}
 				uploadData.Cases = casesList
 				_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
+			} else {
+				for idx, value := range replyMess.Cases{
+					casesList[idx] = replyMess.Cases[idx]
+					result := judgeCodegen(value.SourceCode, imageMakeTag, value.InputContext, value.OutputContext, value.OutputCode, value.TimeLimit, value.MemoryLimit, replyMess.PhaseId, value.InstLimit)
+					casesList[idx].Verdict = result.Verdict
+					casesList[idx].StdOutMessage = result.StdOutMessage
+					casesList[idx].StdErrMessage = result.StdErrMessage
+					casesList[idx].Runtime = result.Runtime
+					casesList[idx].InstsCount = result.InstsCount
+					casesList[idx].RunningStdOut = result.RunningStdOut
+					casesList[idx].RavelMessage = result.RavelMessage
+					casesList[idx].ErrorMessage = result.ErrorMessage
+				}
+				uploadData.Cases = casesList
+				_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
 			}
 
 		}
-
-
-
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 }

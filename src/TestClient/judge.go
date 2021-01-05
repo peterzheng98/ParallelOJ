@@ -136,13 +136,15 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 	se.StdOutMessage = base64.StdEncoding.EncodeToString([]byte(stdoutStr))
 	if err == context.DeadlineExceeded{
 		se.Verdict = VERDICT_TLE
+		se.RunningStdOut = base64.StdEncoding.EncodeToString([]byte("Phase 1 Compiling: Timeout"))
+		se.ErrorMessage = base64.StdEncoding.EncodeToString([]byte("Timeout"))
 		return &se
 	} else if err != nil{
 		se.Verdict = VERDICT_CE
+		se.RunningStdOut = base64.StdEncoding.EncodeToString([]byte("Phase 1 Compiling: Compiling Error"))
 		return &se
 	}
-	// validate the output assembly
-	// todo
+	stdoutMesssage := "Phase 1 Compiling: Passed\n"
 
 	// run by ravel
 	// clean the previous result
@@ -165,6 +167,17 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 		se.ErrorMessage = base64.StdEncoding.EncodeToString([]byte(err.Error()))
 		return &se
 	}
+	// validate the output assembly
+	// todo
+	outputLLVM, err := sh.Command("clang-9", "--target=riscv32", "-march=rv32ima", "output.s", "-c", sh.Dir(ravelHeader)).CombinedOutput()
+	if err != nil{
+		stdoutMesssage = stdoutMesssage + "Phase 2 Validating: Failed\n==stderr and stdout==\n" + string(outputLLVM)
+		se.ErrorMessage = base64.StdEncoding.EncodeToString(outputLLVM)
+		se.RunningStdOut = base64.StdEncoding.EncodeToString([]byte(stdoutMesssage))
+		se.Verdict = VERDICT_WRONG
+		return &se
+	}
+	stdoutMesssage = stdoutMesssage + "Phase 2 Validating: Passed\n==stderr and stdout==\n" + string(outputLLVM)
 	inputCtx, _ := base64.StdEncoding.DecodeString(inputContext)
 	err = ioutil.WriteFile(fmt.Sprintf("%s/test.in", ravelHeader), inputCtx, 0644)
 	if err != nil {
@@ -194,7 +207,7 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 	contentsMatched := false
 	exitcodeMatched := false
 	instOut := false
-	stdoutMesssage := ""
+
 	file, err2 := os.Open(fmt.Sprintf("%s/test.out", ravelHeader))
 	if err2 == nil {
 		// fetch the simulation output
@@ -234,8 +247,8 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 		ravelErrorBytes, _ := ioutil.ReadAll(ravelError)
 		ravelErrorStr := string(ravelErrorBytes)
 		se.InstsCount = timeVal
-		se.RunningStdOut = stdoutMesssage
-		se.RavelMessage = ravelErrorStr
+		se.RunningStdOut = base64.StdEncoding.EncodeToString([]byte(stdoutMesssage))
+		se.RavelMessage = base64.StdEncoding.EncodeToString([]byte(ravelErrorStr))
 		if exitcodeMatched && contentsMatched && instOut {
 			se.Verdict = VERDICT_CORRECT
 		} else {

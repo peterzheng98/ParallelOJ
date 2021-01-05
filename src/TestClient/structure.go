@@ -5,13 +5,22 @@ var VERDICT_WRONG = 1
 var VERDICT_TLE = 2
 var VERDICT_MLE = 3
 var VERDICT_RE = 4
-var VERDICT_UNK = 5
-type SemanticJudgeResult struct {
+var VERDICT_CE = 5
+var VERDICT_UNK = 6
+
+var JUDGE_MODE_CODEGEN = 1
+var JUDGE_MODE_OPTIMIZE = 2
+
+type JudgeResult struct {
 	Verdict       int     `json:"verdict"`
 	StdOutMessage string  `json:"std_out_message"`
 	StdErrMessage string  `json:"std_err_message"`
 	Runtime       float32 `json:"runtime"`
 	InstsCount    int64   `json:"insts_count"`
+	/* Running */
+	RunningStdOut string `json:"running_std_out"`
+	RavelMessage  string `json:"ravel_message"`
+	ErrorMessage  string `json:"error_message"`
 }
 
 type ClientConfig_FileJSON struct {

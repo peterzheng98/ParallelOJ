@@ -11,6 +11,7 @@ type ClientConfig_FileJSON struct {
 	PathPrefix    string `json:"path_prefix"`
 	BaseImageName string `json:"base_image_name"`
 	DatasetMount  string `json:"dataset_mount"`
+	RavelHeader   string `json:"ravel_header"`
 }
 
 type RegisterClientInformation_HTTPJSON struct {

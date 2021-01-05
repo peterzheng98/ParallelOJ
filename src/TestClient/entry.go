@@ -25,6 +25,7 @@ var CliRequestCount = 1
 var localClonePath = ""
 var dataPath = ""
 var base_image = ""
+var ravelHeader = ""
 // Danger Zone!!
 var UNTRUST = false
 
@@ -149,7 +150,7 @@ func makeJudge(addr string, port int, idk string) {
 			_ = ioutil.WriteFile(JudgeSemanticPath, JudgeSemanticContent, 0644)
 			JudgeCodegenContent := []byte("cp /mounted/input.mx /src/ && bash codegen.bash && cp /src/output.mx /mounted/")
 			_ = ioutil.WriteFile(JudgeCodegenPath, JudgeCodegenContent, 0644)
-			JudgeOptimizeContent := []byte("cp /mounted/input.mx /src/ && bash optimize.bash && cp /src/output.mx /mounted/")
+			JudgeOptimizeContent := []byte("cp /mounted/input.mx /src/ && bash optimize.bash && cp /src/output.s /mounted/")
 			_ = ioutil.WriteFile(JudgeOptimizePath, JudgeOptimizeContent, 0644)
 			contents := []byte(fmt.Sprintf("FROM %s\nWORKDIR /src\nCOPY src .\nCOPY *.bash /\nRUN /bin/bash build.bash", base_image))
 			err = ioutil.WriteFile(DockerfilePath, contents, 0644)
@@ -252,6 +253,7 @@ func ClientEntry(ConfigPath string) {
 	localClonePath = cliConfig.PathPrefix
 	base_image = cliConfig.BaseImageName
 	dataPath = cliConfig.DatasetMount
+	ravelHeader = cliConfig.RavelHeader
 	utils.Logs("client", "Get client configuration files.")
 	utils.Logs("client", utils.ClientJSONToString(cliConfig))
 	// test connections and fetch the base config

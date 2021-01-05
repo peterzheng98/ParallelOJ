@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -74,7 +76,7 @@ func judgeSemantic(source string, dockerTags string, expectedAssertion bool, tim
 }
 
 
-func judgeCodegen(source string, dockerTags string, inputContext string, outputContext string, exitCode int, timeout float32, memoryOut int, mode int, commitHash string) *JudgeResult {
+func judgeCodegen(source string, dockerTags string, inputContext string, outputContext string, exitCode int, timeout float32, memoryOut int, mode int, instLimit int64) *JudgeResult {
 	se := JudgeResult{
 		Verdict:       0,
 		StdOutMessage: "",
@@ -191,6 +193,7 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 	}
 	contentsMatched := false
 	exitcodeMatched := false
+	instOut := false
 	stdoutMesssage := ""
 	file, err2 := os.Open(fmt.Sprintf("%s/test.out", ravelHeader))
 	if err2 == nil {
@@ -201,13 +204,52 @@ func judgeCodegen(source string, dockerTags string, inputContext string, outputC
 			contentsStr = contentsStr[:len(contentsStr) - 1]
 		}
 		contentsMatched = contentsStr == outputCtxStr
-		if !contentsMatched {
+		if contentsMatched {
 			stdoutMesssage = "Output: Passed\n"
 		} else {
-			stdoutMesssage = fmt.Sprintf("Output: Failed\nExpected:%s\nReceived:%s", outputCtxStr, contentsStr)
+			stdoutMesssage = fmt.Sprintf("Output: Failed\nExpected:%s\nReceived:%s\n", outputCtxStr, contentsStr)
+		}
+		fileReport, _ := os.Open(fmt.Sprintf("%s/report.txt", ravelHeader))
+		fileReportBytes, _ := ioutil.ReadAll(fileReport)
+		fileReportStr := string(fileReportBytes)
+		exitCodeRe := regexp.MustCompile("exit code: ([0-9][0-9]*)")
+		timeRe := regexp.MustCompile("time: ([0-9][0-9]*)")
+		exitCodeFetch, _ := strconv.Atoi(exitCodeRe.FindString(fileReportStr)[11:])
+		timeVal, _ := strconv.ParseInt(timeRe.FindString(fileReportStr)[6:], 10, 64)
+
+		exitcodeMatched = exitCode == exitCodeFetch
+		if exitcodeMatched{
+			stdoutMesssage = stdoutMesssage + "Exit code: Passed\n"
+		} else {
+			stdoutMesssage = stdoutMesssage + fmt.Sprintf("Exit code: Failed\nExpected:%d\nReceived:%d\n", exitCode, exitCodeFetch)
 		}
 
-
+		instOut = timeVal <= instLimit
+		if instOut{
+			stdoutMesssage = stdoutMesssage + fmt.Sprintf("Runtime: Passed, %d\n", timeVal)
+		} else {
+			stdoutMesssage = stdoutMesssage + fmt.Sprintf("Runtime: Failed\nExpected:%d\nReceived:%d\n", instLimit, timeVal)
+		}
+		ravelError, _ := os.Open(fmt.Sprintf("%s/report.err", ravelHeader))
+		ravelErrorBytes, _ := ioutil.ReadAll(ravelError)
+		ravelErrorStr := string(ravelErrorBytes)
+		se.InstsCount = timeVal
+		se.RunningStdOut = stdoutMesssage
+		se.RavelMessage = ravelErrorStr
+		if exitcodeMatched && contentsMatched && instOut {
+			se.Verdict = VERDICT_CORRECT
+		} else {
+			se.Verdict = VERDICT_WRONG
+		}
+	} else {
+		se.Verdict = VERDICT_RE
+		file, err3 := os.Open(fmt.Sprintf("%s/report.err", ravelHeader))
+		if err3 == nil {
+			contents, _ := ioutil.ReadAll(file)
+			se.ErrorMessage = base64.StdEncoding.EncodeToString([]byte(err2.Error() + "\nError Output:\n" + string(contents)))
+		} else {
+			se.ErrorMessage = base64.StdEncoding.EncodeToString([]byte(err2.Error()))
+		}
 	}
 	return &se
 }

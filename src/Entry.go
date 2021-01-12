@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git"
 	_ "github.com/go-git/go-git"
 	"github.com/go-git/go-git/plumbing"
+	_ "github.com/nats-io/nuid"
 	"io/ioutil"
 	"time"
 	"utils"

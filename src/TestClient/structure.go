@@ -84,7 +84,7 @@ type TestcaseFormat struct {
 	SourceCode  string  `json:"source_code"`
 	Assertion   bool    `json:"assertion"`
 	TimeLimit   float32 `json:"time_limit"`
-	InstLimit   int64     `json:"inst_limit"`
+	InstLimit   int64   `json:"inst_limit"`
 	MemoryLimit int     `json:"memory_limit"`
 	Testcase    string  `json:"testcase"`
 	/* - For codegen / optimize only, requires run here- */
@@ -124,4 +124,6 @@ type UploadWorkSlice struct {
 	PortsInfo    Ports            `json:"ports_info"`
 	BuildResult  string           `json:"build_result"`
 	BuildVerdict int              `json:"build_verdict"`
+	Port         int              `json:"port"`
+	IDK          string           `json:"idk"`
 }

@@ -174,6 +174,8 @@ func makeJudge(addr string, port int, idk string) {
 					PortsInfo:    Ports{port, idk},
 					BuildResult:  buildResult,
 					BuildVerdict: 1, // Failed
+					Port: port,
+					IDK: idk,
 				}
 				if err != nil {
 					uploadData.BuildVerdict = 1
@@ -204,6 +206,8 @@ func makeJudge(addr string, port int, idk string) {
 				PortsInfo:    Ports{port, idk},
 				BuildResult:  buildFailMessage,
 				BuildVerdict: 1, // Failed
+				Port: port,
+				IDK: idk,
 			}
 			_ = utils.SendHTTPRequestJSON(addr, port, uploadData)
 			continue
@@ -222,6 +226,8 @@ func makeJudge(addr string, port int, idk string) {
 				PortsInfo:    Ports{port, idk},
 				BuildResult:  "",
 				BuildVerdict: 0,
+				Port: port,
+				IDK: idk,
 			}
 			casesList := make([]TestcaseFormat, len(replyMess.Cases))
 			if replyMess.PhaseId == 0 {

@@ -8,7 +8,67 @@ import (
 	"utils"
 )
 
-func RoutineRequestJudge(w http.ResponseWriter, r *http.Request) {
+func RoutineSubmitJudgeWork(w http.ResponseWriter, r *http.Request) {
+	var recvMessage utils.UploadWorkSlice
+	err := json.NewDecoder(r.Body).Decode(&recvMessage)
+	if err != nil {
+		utils.NetworkWarnings(r, "server::RoutineSubmitJudgeWork", fmt.Sprintf("Format error: %s", err.Error()))
+		return
+	}
+	matchIDKMutex.Lock()
+	var expectIDK = matchIDK[recvMessage.Port]
+	matchIDKMutex.Unlock()
+	if expectIDK != recvMessage.IDK {
+		utils.NetworkWarnings(r, fmt.Sprintf("server::RoutineRequestJudgeWork(%d)", recvMessage.Port),
+			fmt.Sprintf("IDK not fit. Expected: %s, Receviced: %s", expectIDK, recvMessage.IDK))
+
+		_ = json.NewEncoder(w).Encode(DispatchedWorkSlice{
+			User:    "",
+			GitRepo: "",
+			GitHash: "",
+			PhaseId: 0,
+			WorkCnt: -1,
+			Cases:   nil,
+		})
+		return
+	}
+	gitHashListMux.Lock()
+
+	judgeElement := judgeStatus[recvMessage.GitHash]
+	for _, element := range recvMessage.Cases{
+		targetStatus := judgeElement.Phase[judgeElement.CurrentPhase].Running[element.ResultId]
+		targetStatus.Testcase = TestcaseFormat{
+			IsAssertion:   element.IsAssertion,
+			ResultId:      element.ResultId,
+			SourceCode:    element.SourceCode,
+			Assertion:     element.Assertion,
+			TimeLimit:     element.TimeLimit,
+			InstLimit:     element.InstLimit,
+			MemoryLimit:   element.MemoryLimit,
+			Testcase:      element.Testcase,
+			InputContext:  element.InputContext,
+			OutputContext: element.OutputContext,
+			OutputCode:    element.OutputCode,
+			BasicType:     element.BasicType,
+			Verdict:       element.Verdict,
+			StdOutMessage: element.StdOutMessage,
+			StdErrMessage: element.StdErrMessage,
+			Runtime:       element.Runtime,
+			InstsCount:    element.InstsCount,
+			RunningStdOut: element.RunningStdOut,
+			RavelMessage:  element.RavelMessage,
+			ErrorMessage:  element.ErrorMessage,
+		}
+		if element.Verdict == VERDICT_CORRECT{
+			judgeElement.Phase[judgeElement.CurrentPhase].Success = append(judgeElement.Phase[judgeElement.CurrentPhase].Success, targetStatus)
+		} else {
+			judgeElement.Phase[judgeElement.CurrentPhase].Fail = append(judgeElement.Phase[judgeElement.CurrentPhase].Fail, targetStatus)
+		}
+		delete(judgeElement.Phase[judgeElement.CurrentPhase].Running, element.ResultId)
+	}
+	// Check for the stage information
+	gitHashListMux.Unlock()
+	return
 
 }
 
@@ -94,6 +154,20 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 		if maxCnt > recvMessage.RequestCount {
 			maxCnt = recvMessage.RequestCount
 		}
+		// TODO: Detect whether the working queue has no element
+		if maxCnt == 0 {
+			gitHashListMux.Unlock()
+			// Critical Region: gitHashList(JudgePool) End
+			_ = json.NewEncoder(w).Encode(DispatchedWorkSlice{
+				User:    "",
+				GitRepo: "",
+				GitHash: "",
+				PhaseId: 0,
+				WorkCnt: 0,
+				Cases:   nil,
+			})
+			return
+		}
 		var sendWork = DispatchedWorkSlice{
 			User:    e.User,
 			GitRepo: e.GitRepo,
@@ -105,24 +179,11 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 		sendWork.Cases = make([]TestcaseFormat, maxCnt)
 		var idx int
 		for idx = 0; idx < maxCnt; idx++ {
-			sendWork.Cases[idx] = TestcaseFormat{
-				IsAssertion:   e.CurrentPhase == 0,
-				SourceCode:    "",
-				Assertion:     false,
-				TimeLimit:     0,
-				InstLimit:     0,
-				MemoryLimit:   0,
-				Testcase:      e.Phase[e.CurrentPhase].Pending[idx].CaseId,
-				InputContext:  "",
-				OutputContext: "",
-				OutputCode:    0,
-				BasicType:     0,
-				ResultId:      JudgeIdKey.Next(),
-			}
+			sendWork.Cases[idx] = e.Phase[e.CurrentPhase].Pending[idx].Testcase
 			e.Phase[e.CurrentPhase].Pending[idx].Status = INRunning
 			e.Phase[e.CurrentPhase].Pending[idx].JudgerId = serverName
 			e.Phase[e.CurrentPhase].Pending[idx].ResultId = sendWork.Cases[idx].ResultId
-			e.Phase[e.CurrentPhase].Running = append(e.Phase[e.CurrentPhase].Running, e.Phase[e.CurrentPhase].Pending[idx])
+			e.Phase[e.CurrentPhase].Running[sendWork.Cases[idx].ResultId] = e.Phase[e.CurrentPhase].Pending[idx]
 		}
 		e.Phase[e.CurrentPhase].Pending = append(e.Phase[e.CurrentPhase].Pending[maxCnt:])
 		if len(e.Phase[e.CurrentPhase].Pending) == 0 {
@@ -131,6 +192,7 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 		gitHashListMux.Unlock()
 		// Critical Region: gitHashList(JudgePool) End
 		// TODO: fill the data
+
 		_ = json.NewEncoder(w).Encode(sendWork)
 		return
 	}

@@ -123,3 +123,13 @@ type UploadWorkSlice struct {
 	Port         int              `json:"port"`
 	IDK          string           `json:"idk"`
 }
+
+
+func FindIdx(s []string, target string) int {
+	for idx, d := range s{
+		if d == target{
+			return idx
+		}
+	}
+	return -1
+}

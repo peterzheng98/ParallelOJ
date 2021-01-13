@@ -67,6 +67,46 @@ func RoutineSubmitJudgeWork(w http.ResponseWriter, r *http.Request) {
 		delete(judgeElement.Phase[judgeElement.CurrentPhase].Running, element.ResultId)
 	}
 	// Check for the stage information
+	if len(judgeElement.Phase[judgeElement.CurrentPhase].Running) == 0 && len(judgeElement.Phase[judgeElement.CurrentPhase].Pending) == 0 {
+		if (len(judgeElement.Phase[judgeElement.CurrentPhase].Success) != 0) && (len(judgeElement.Phase[judgeElement.CurrentPhase].Fail) == 0) {
+			judgeElement.CurrentPhase = judgeElement.CurrentPhase + 1
+
+			if judgeElement.CurrentPhase == 3{
+				// Finish all the points, remove from the list
+				idx := utils.FindIdx(gitHashList, judgeElement.GitHash)
+				gitHashList = append(append([]string{}, gitHashList[0:idx]...), gitHashList[idx +1:]...)
+				delete(judgeStatus, judgeElement.GitHash)
+				gitHashListMux.Unlock()
+				// TODO: Database: add finish job to database
+				return
+			}
+
+			stageTestcaseMutex[judgeElement.CurrentPhase].Lock()
+
+			for _, ele := range stageTestcase[judgeElement.CurrentPhase] {
+				judgeElement.Phase[judgeElement.CurrentPhase].Pending = append(judgeElement.Phase[judgeElement.CurrentPhase].Pending, JudgeStatus{
+					Phase:    judgeElement.CurrentPhase,
+					Status:   0,
+					CaseId:   "",
+					ResultId: JudgeIdKey.Next(),
+					JudgerId: "",
+					Testcase: ele,
+				})
+			}
+
+			stageTestcaseMutex[judgeElement.CurrentPhase].Unlock()
+			judgeStatus[judgeElement.GitHash] = judgeElement
+
+		} else if (len(judgeElement.Phase[judgeElement.CurrentPhase].Success) != 0) && (len(judgeElement.Phase[judgeElement.CurrentPhase].Fail) != 0) {
+			// remove from the list
+			idx := utils.FindIdx(gitHashList, judgeElement.GitHash)
+			gitHashList = append(append([]string{}, gitHashList[0:idx]...), gitHashList[idx+1:]...)
+			delete(judgeStatus, judgeElement.GitHash)
+			gitHashListMux.Unlock()
+			return
+			// TODO: add to database: failed to judge
+		}
+	}
 	gitHashListMux.Unlock()
 	return
 

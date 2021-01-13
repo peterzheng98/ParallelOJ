@@ -50,6 +50,11 @@ var (
 	gitHashListMux sync.Mutex
 )
 
+var (
+	stageTestcase [][]TestcaseFormat
+	stageTestcaseMutex []sync.Mutex
+)
+
 type TestcaseFormat struct {
 	IsAssertion bool    `json:"is_assertion"`
 	ResultId    string  `json:"result_id"`

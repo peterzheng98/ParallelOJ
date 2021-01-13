@@ -44,6 +44,10 @@ func ServerEntry(ConfigPath string) {
 	servConfig := utils.ReadFromServerJSON(ConfigPath)
 	utils.Logs("server", "Get server configuration file")
 	utils.Logs("server", utils.ServerJSONToString(servConfig))
+	// make 3 stage: semantic, optimize, codegen
+	// here should startup go routine for fetching the data
+	stageTestcase = make([][]TestcaseFormat, 3)
+	stageTestcaseMutex = make([]sync.Mutex, 3)
 	identificationToken = servConfig.ServerIdentificationToken
 	globalHeartBeat = servConfig.Heartbeat
 	globalServerBindAddr = servConfig.BindAddr

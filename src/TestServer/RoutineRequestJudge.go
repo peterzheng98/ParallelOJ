@@ -2,6 +2,7 @@ package TestServer
 
 import (
 	"TestClient"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -32,6 +33,8 @@ func RoutineSubmitJudgeWork(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	// TODO: check whether it is build
+
 	gitHashListMux.Lock()
 
 	judgeElement := judgeStatus[recvMessage.GitHash]
@@ -169,6 +172,16 @@ func RoutineRequestJudgeWork(w http.ResponseWriter, r *http.Request) {
 			WorkCnt: 1,
 			Cases:   nil,
 		}
+
+		go func() {
+			db2, _ := sql.Open(servConfig.DatabaseType, fmt.Sprintf("%s:%s@tcp(%s:%d)%s",
+				servConfig.DatabaseUser, servConfig.DatabasePassword, servConfig.DatabaseAddr,
+				servConfig.DatabasePort, servConfig.DatabasePath))
+			sqlCmd := fmt.Sprintf("UPDATE userdatabase SET stu_judge_status=1 WHERE stu_uuid='%s' AND stu_repo='%s'", e.User, e.GitRepo)
+			_, _ = db2.Exec(sqlCmd)
+			db2.Close()
+		}()
+
 		e.Build.Status = INRunning
 		judgeStatus[headHash] = e
 		gitHashListMux.Unlock()

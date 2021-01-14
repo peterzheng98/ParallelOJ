@@ -42,10 +42,11 @@ var globalHeartBeat = 0
 var globalServerBindAddr = ""
 
 var db *sql.DB
+var servConfig utils.ServerConfig_FileJSON
 
 func ServerEntry(ConfigPath string) {
 	utils.Logs("server", fmt.Sprintf("Startup with server mode with file %s.", ConfigPath))
-	servConfig := utils.ReadFromServerJSON(ConfigPath)
+	servConfig = utils.ReadFromServerJSON(ConfigPath)
 	utils.Logs("server", "Get server configuration file")
 	utils.Logs("server", utils.ServerJSONToString(servConfig))
 	// make 3 stage: semantic, optimize, codegen
